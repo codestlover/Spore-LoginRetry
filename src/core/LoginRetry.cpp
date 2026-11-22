@@ -151,7 +151,8 @@ Hook hooks[] = {
 bool HostMatches() {
     auto* dos = reinterpret_cast<IMAGE_DOS_HEADER*>(gameBase);
     auto* nt = reinterpret_cast<IMAGE_NT_HEADERS*>(gameBase + dos->e_lfanew);
-    return nt->FileHeader.Machine == IMAGE_FILE_MACHINE_I386 && nt->OptionalHeader.SizeOfImage == HostImageSize &&
+    unsigned size = nt->OptionalHeader.SizeOfImage;
+    return nt->FileHeader.Machine == IMAGE_FILE_MACHINE_I386 && (size == HostImageSize || size == SteamHostImageSize) &&
            nt->FileHeader.TimeDateStamp == HostTimestamp;
 }
 
@@ -232,7 +233,7 @@ void Init() {
         MessageBoxW(nullptr,
                     L"" LOGIN_RETRY_NAME " could not start: this version of Spore is not supported. A login that "
                     L"fails is not tried again.\n\n" LOGIN_RETRY_NAME " supports only Spore Galactic Adventures "
-                    L"with the March 2017 patch (SporeApp_ModAPIFix.exe).",
+                    L"with the March 2017 patch (SporeApp_ModAPIFix.exe, or Steam's SporeApp.exe).",
                     ModNameWide, MB_OK | MB_ICONERROR);
         return;
     }

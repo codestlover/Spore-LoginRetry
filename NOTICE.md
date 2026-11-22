@@ -1,7 +1,7 @@
 
 # Notices
 
-Login Retry 1.0.0 is licensed under GPL-3.0-or-later; see `LICENSE`.
+Login Retry 1.0.1 is licensed under GPL-3.0-or-later; see `LICENSE`.
 
 Login Retry contains no code or assets of *Spore* or *Spore Galactic Adventures* by Maxis/Electronic Arts. To
 recognise the game it works with, `src/core/Sites.hpp` holds the addresses of the game's functions and function

@@ -5,7 +5,7 @@ A *Spore* mini-mod for the login to the Spore servers. It fixes the game's HTTP 
 of the server for a failed connection, and when a login fails for a reason that can pass by itself, it has the game
 ask the server again a few times before it gives up and shows its message.
 
-Current version: **1.0.0**. Download `LoginRetry.sporemod` from the [Login Retry 1.0.0](../../releases/tag/v1.0.0)
+Current version: **1.0.1**. Download `LoginRetry.sporemod` from the [Login Retry 1.0.1](../../releases/tag/v1.0.1)
 release.
 
 ## What it changes
@@ -74,8 +74,12 @@ The mod does its work only while the game logs in. During play it costs nothing.
 To remove the mod, use **Spore ModAPI Easy Uninstaller → Login Retry**. The mod stores nothing in saves.
 
 Login Retry supports *Spore Galactic Adventures* with the March 2017 patch (`SporeApp_ModAPIFix.exe`, the version
-the ModAPI Launcher Kit runs). On any other game build it changes nothing and shows a message instead. It also shows
-a message when the game's login code is not the one it knows, and then leaves the login as it is.
+the ModAPI Launcher Kit runs, and the `SporeApp.exe` of the Steam copy, the same game build). Since 1.0.1 it works
+with Steam's copy of Spore GA: Steam's protection adds a section of its own to the executable, which makes its image
+larger, and 1.0.0 refused it as an unsupported version. The game's code is encrypted in Steam's file and is the same
+as in `SporeApp_ModAPIFix.exe` once Steam has decrypted it, before the mod looks at it; the mod checks it byte for
+byte as on any other copy. On any other game build it changes nothing and shows a message instead. It also shows a
+message when the game's login code is not the one it knows, and then leaves the login as it is.
 
 ## Other mods
 
@@ -92,7 +96,8 @@ mod has changed it — it leaves everything alone and says so in a message. It h
 
 The mod is a 32-bit DLL loaded by the ModAPI Launcher. After the game has finished starting up it:
 
-- checks the game executable by its time stamp and image size, wherever Windows has placed it in memory;
+- checks the game executable by its time stamp and image size, wherever Windows has placed it in memory (the image
+  of Steam's `SporeApp.exe`, the same build, is larger by the section of Steam's protection);
 - checks the bytes of the game's code at the eleven places it relies on and the five table entries that lead to five
   of the functions, and reads the place of the game's request queue out of the game's own accessor;
 - puts its own functions into three table entries: the login manager's *log in* and *login result*, and the login
@@ -135,7 +140,7 @@ from them, which come under the Microsoft license and are not redistributed. `-D
 accept that license. If you already prepared these dependencies for one of the other mods, set `CIV_DEPS` to that
 `deps` folder (an absolute path) before the first `cmake` run to reuse them.
 
-The release was built with clang-cl 21.1.8 and CMake 4.3; built the same way, a fresh checkout of tag `v1.0.0` gives
+The release was built with clang-cl 21.1.8 and CMake 4.4; built the same way, a fresh checkout of tag `v1.0.1` gives
 byte for byte the DLL in the release.
 
 Every text file starts with exactly one empty line and ends with exactly two; `cmake/layout.sh` checks this on each
@@ -151,11 +156,14 @@ The mod was tried in the game on 10 and 11 November 2026, in builds that also wr
   function again worked in the game;
 - with the changed byte, all 30 logins worked at the first request, among them a third start within five minutes.
 
+Version 1.0.1 changes only the check of the game executable, to take Steam's `SporeApp.exe`. It was checked against
+Steam's executable with the tests below, its code decrypted as Steam decrypts it, and was not played with Steam's copy.
+
 Releases are checked with tests that are not part of this repository:
 
-- the game's own status line reader, taken from `SporeApp_ModAPIFix.exe`, runs in an emulator with the byte as
-  shipped and as changed: as shipped it rejects `HTTP/1.1 200 `, changed it reads it, and every other line — with a
-  reason phrase, too short, malformed, with a status outside 100–599 — is treated as before;
+- the game's own status line reader, taken from `SporeApp_ModAPIFix.exe` and from Steam's `SporeApp.exe`, runs in an
+  emulator with the byte as shipped and as changed: as shipped it rejects `HTTP/1.1 200 `, changed it reads it, and
+  every other line — with a reason phrase, too short, malformed, with a status outside 100–599 — is treated as before;
 - a Wine test loads the built `LoginRetry.dll` into a stand-in for the game: a program with the game's image size
   and time stamp, placed at another base address than the game prefers, that holds at the game's own addresses
   functions beginning with the game's bytes, the two function tables in read-only memory, the code around the byte
@@ -167,8 +175,13 @@ Releases are checked with tests that are not part of this repository:
   game is told, and that shutting down puts the tables and the byte back;
 - the same program checks that the DLL refuses a table another mod changed, changed code and a foreign executable,
   each with its message and without changing anything;
-- a second program reads `SporeApp_ModAPIFix.exe` itself and checks every byte and table entry the DLL relies on,
-  and that the three functions it replaces are reached through their one table entry only.
+- the same tests run again in a stand-in with the image size of Steam's `SporeApp.exe`, and a stand-in with an image
+  size or a time stamp of no supported build is refused as a foreign executable;
+- a second program reads `SporeApp_ModAPIFix.exe` and Steam's `SporeApp.exe` themselves and checks every byte and
+  table entry the DLL relies on, and that the three functions it replaces are reached through their one table entry
+  only;
+- a relocation check maps both executables at 0x400000 and at other base addresses, with the executable's relocations
+  applied as Windows applies them, and makes the same checks on them as the DLL: every check passes at every base.
 
 ## Credits and license
 
